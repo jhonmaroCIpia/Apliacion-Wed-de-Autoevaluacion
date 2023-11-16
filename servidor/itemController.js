@@ -25,29 +25,40 @@ module.exports = (pool) => {
   // Obtener un solo ítem por ID
   router.get('/detalle/:ieva_id', (req, res) => {
     const { ieva_id } = req.params;
-    const query = `SELECT * FROM item_evaluacion WHERE ieva_id = ${ieva_id}`;
+    console.log(`Solicitud para obtener detalles del ítem ID ${ieva_id}`);
+    const query = 'SELECT * FROM item_evaluacion WHERE ieva_id = ?';
 
-    conn.query(query, (error, result) => {
-      if (error) return handleErrors(res, error);
+    pool.query(query, [ieva_id], (error, result) => {
+      if (error) {
+        console.error('Error en la consulta:', error.message);
+        return handleErrors(res, error);
+      }
 
       if (result.length > 0) {
-        res.json(result);
+        console.log('Detalles del ítem encontrados:', result[0]);
+        res.json(ItemEvaluacion.fromDBRow(result[0]));
       } else {
+        console.log('Ítem no encontrado');
         res.json({ message: 'Item not found' });
       }
     });
   });
 
+
   // Agregar item
   router.post('/agregar', (req, res) => {
     const nuevoItem = new ItemEvaluacion(
       null,
-      req.body.lab_id,
-      req.body.eva_id,
-      req.body.ieva_acto,
-      req.body.ieva_estado,
-      req.body.ieva_puntaje
+      req.body.Lab_Id,
+      req.body.Eva_Id,
+      req.body.Ieva_Acto,
+      req.body.Ieva_Estado,
+      req.body.Ieva_Puntaje
     );
+
+    if (nuevoItem.Lab_Id === null) {
+      return res.status(400).json({ error: 'LAB_ID cannot be null' });
+    }
 
     const query = 'INSERT INTO item_evaluacion SET ?';
     pool.query(query, nuevoItem, (error) => {
@@ -60,21 +71,22 @@ module.exports = (pool) => {
     });
   });
 
+
   // Actualizar item
   router.put('/editar/:ieva_id', (req, res) => {
-    const { prmIevaId } = req.params;
+    const { ieva_id } = req.params;
 
     const item = new ItemEvaluacion(
-      null,
-      req.body.lab_id,
-      req.body.eva_id,
-      req.body.ieva_acto,
-      req.body.ieva_estado,
-      req.body.ieva_puntaje
+      ieva_id,
+      req.body.Lab_Id,
+      req.body.Eva_Id,
+      req.body.Ieva_Acto,
+      req.body.Ieva_Estado,
+      req.body.Ieva_Puntaje
     );
 
     const query = 'UPDATE item_evaluacion SET ? WHERE ieva_id = ?';
-    pool.query(query, [item, prmIevaId], (error) => {
+    pool.query(query, [item, ieva_id], (error) => {
       if (error) {
         console.error(error.message);
         return res.status(500).json({ error: 'Internal Server Error' });
@@ -86,10 +98,10 @@ module.exports = (pool) => {
 
   // Eliminar item
   router.delete('/eliminar/:ieva_id', (req, res) => {
-    const { prmIevaId } = req.params;
+    const { ieva_id } = req.params;
 
     const query = 'DELETE FROM item_evaluacion WHERE ieva_id = ?';
-    pool.query(query, [prmIevaId], (error) => {
+    pool.query(query, [ieva_id], (error) => {
       if (error) {
         console.error(error.message);
         return res.status(500).json({ error: 'Internal Server Error' });
