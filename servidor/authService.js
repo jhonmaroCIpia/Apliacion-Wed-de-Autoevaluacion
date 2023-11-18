@@ -10,6 +10,11 @@ class AuthService {
   async getUserByEmail(email) {
     try {
       const user = await this.userModel.findByEmail(email);
+
+      if (!user) {
+        return null; // Usuario no encontrado
+      }
+
       return user;
     } catch (error) {
       console.error('Error al obtener usuario por correo:', error);
@@ -32,9 +37,13 @@ class AuthService {
       }
 
       // Generar token JWT
-      const token = jwt.sign({ userId: user.USR_IDENTIFICACION, email: user.USU_CORREO }, this.secretKey, {
-        expiresIn: '1h', // Tiempo expiración, falta logout
+      const token = jwt.sign({ userId: user.USR_IDENTIFICACION, email: user.USU_CORREO, rol: user.ROL_DESCRIPCION }, this.secretKey, {
+        expiresIn: '30s', // Tiempo expiracion
       });
+
+      console.log('Token generado:', token);
+
+      res.json({ token });
 
       user.token = token;
 
