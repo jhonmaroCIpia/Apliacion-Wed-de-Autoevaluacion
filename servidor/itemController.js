@@ -1,29 +1,24 @@
+// itemController.js
 const express = require('express');
 const ItemEvaluacion = require('./models/ItemEvaluacion');
+const AuthMiddleware = require('./authMiddleware');
 
 const router = express.Router();
+const authMiddleware = new AuthMiddleware('PASSWORD');
 
 module.exports = (pool) => {
   // Obtener items según evaluación
-  router.get('/:eva_id', (req, res) => {
+  router.get('/:eva_id', authMiddleware.verifyToken, (req, res) => {
     const { eva_id } = req.params;
     console.log(`Solicitud para obtener items de la evaluación ID ${eva_id}`);
-    const query = 'SELECT * FROM item_evaluacion WHERE eva_id = ?';
-
-    pool.query(query, [eva_id], (error, result) => {
-      if (error) {
-        console.error(error.message);
-        return res.status(500).json({ error: 'Internal Server Error' });
-      }
-
-      const items = result.map(ItemEvaluacion.fromDBRow);
-      console.log('Items enviados:', items);
-      res.json(items);
-    });
+    if (req.user && req.user.rol !== 'guest') {
+    } else {
+      res.status(403).json({ message: 'Forbidden' });
+    }
   });
 
   // Obtener un solo ítem por ID
-  router.get('/detalle/:ieva_id', (req, res) => {
+  router.get('/detalle/:ieva_id', authMiddleware.verifyToken, (req, res) => {
     const { ieva_id } = req.params;
     console.log(`Solicitud para obtener detalles del ítem ID ${ieva_id}`);
     const query = 'SELECT * FROM item_evaluacion WHERE ieva_id = ?';
@@ -44,9 +39,9 @@ module.exports = (pool) => {
     });
   });
 
-
   // Agregar item
-  router.post('/agregar', (req, res) => {
+  router.post('/add', authMiddleware.verifyToken, authMiddleware.checkRole(['decano']), (req, res) => {
+
     const nuevoItem = new ItemEvaluacion(
       null,
       req.body.Lab_Id,
@@ -56,9 +51,8 @@ module.exports = (pool) => {
       req.body.Ieva_Puntaje
     );
 
-    if (nuevoItem.Lab_Id === null) {
-      return res.status(400).json({ error: 'LAB_ID cannot be null' });
-    }
+    const userRole = req.user ? req.user.rol : null;
+    console.log(`Usuario logeado con rol: ${userRole}`);
 
     const query = 'INSERT INTO item_evaluacion SET ?';
     pool.query(query, nuevoItem, (error) => {
@@ -71,9 +65,8 @@ module.exports = (pool) => {
     });
   });
 
-
   // Actualizar item
-  router.put('/editar/:ieva_id', (req, res) => {
+  router.put('/editar/:ieva_id', authMiddleware.verifyToken, authMiddleware.checkRole(['decano']), (req, res) => {
     const { ieva_id } = req.params;
 
     const item = new ItemEvaluacion(
@@ -97,7 +90,7 @@ module.exports = (pool) => {
   });
 
   // Eliminar item
-  router.delete('/eliminar/:ieva_id', (req, res) => {
+  router.delete('/eliminar/:ieva_id', authMiddleware.verifyToken, authMiddleware.checkRole(['decano']), (req, res) => {
     const { ieva_id } = req.params;
 
     const query = 'DELETE FROM item_evaluacion WHERE ieva_id = ?';

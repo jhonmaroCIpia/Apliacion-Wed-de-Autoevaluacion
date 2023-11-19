@@ -8,7 +8,23 @@ const conn = mysql.createConnection({
 
 class Usuario {
   static findByEmail(email) {
-    const query = 'SELECT * FROM usuario WHERE usu_correo = ? LIMIT 1';
+    const query = `
+      SELECT
+        U.USR_IDENTIFICACION,
+        U.USU_CORREO,
+        U.USU_CONTRASENIA,
+        R.ROL_DESCRIPCION,
+        R.ROL_TIPO
+      FROM
+        usuario U
+      LEFT JOIN
+        userol UR ON U.USR_IDENTIFICACION = UR.USR_IDENTIFICACION
+      JOIN
+        rol R ON UR.ROL_ID = R.ROL_ID
+      WHERE
+        U.USU_CORREO = ?
+      LIMIT 1
+    `;
 
     return new Promise((resolve, reject) => {
       conn.query(query, [email], (error, results) => {
