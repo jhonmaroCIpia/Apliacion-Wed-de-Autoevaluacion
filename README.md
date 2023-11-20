@@ -1,2 +1,2 @@
-# Apliacion-Wed-de-Autoevaluacion
- Aplicacion wed para la gestion de autoevaluaciones de docentes de la universidad del Cauca
+# Aplicacion-Web-de-Autoevaluacion
+Aplicación web para la gestión de autoevaluaciones de docentes de la Universidad del Cauca
