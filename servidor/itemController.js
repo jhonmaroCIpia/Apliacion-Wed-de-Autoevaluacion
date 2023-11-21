@@ -4,7 +4,8 @@ const ItemEvaluacion = require('./models/ItemEvaluacion');
 const AuthMiddleware = require('./authMiddleware');
 
 const router = express.Router();
-const authMiddleware = new AuthMiddleware('PASSWORD');
+const secretKey = process.env.SECRET_KEY || 'defaultSecret';
+const authMiddleware = new AuthMiddleware(secretKey);
 
 module.exports = (pool) => {
   // Obtener items según evaluación

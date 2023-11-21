@@ -6,7 +6,7 @@ const AuthService = require('./authService');
 const Usuario = require('./models/Usuario');
 
 const router = express.Router();
-const secretKey = 'PASSWORD'; // Remplazar
+const secretKey = process.env.SECRET_KEY || 'defaultSecret';
 const authService = new AuthService(Usuario, secretKey);
 
 router.post('/login', async (req, res) => {
@@ -18,12 +18,14 @@ router.post('/login', async (req, res) => {
     const user = await authService.getUserByEmail(email);
 
     if (user) {
-      const isValidPassword = await bcrypt.compare(password, user.USU_CONTRASENIA);
+      const isValidPassword = await authService.comparePasswords(password, user.USU_CONTRASENIA);
 
       if (isValidPassword) {
-        const token = jwt.sign({ userId: user.USR_IDENTIFICACION, email: user.USU_CORREO, rol: user.ROL_DESCRIPCION }, secretKey, {
-          expiresIn: '30s',
-        });
+        const token = jwt.sign(
+          { userId: user.USR_IDENTIFICACION, email: user.USU_CORREO, rol: user.ROL_DESCRIPCION },
+          secretKey,
+          { expiresIn: '2m' }
+        );
 
         console.log('Loged:', { email });
 
@@ -38,6 +40,12 @@ router.post('/login', async (req, res) => {
     console.error('Error en la autenticación:', error);
     res.status(500).json({ message: 'Error en la autenticación' });
   }
+});
+
+router.post('/logout', (req, res) => {
+  const token = req.headers['authorization'];
+  authService.revokeToken(token);
+  res.json({ message: 'Logout exitoso' });
 });
 
 module.exports = router;

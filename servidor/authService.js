@@ -5,6 +5,7 @@ class AuthService {
   constructor(userModel, secretKey) {
     this.userModel = userModel;
     this.secretKey = secretKey;
+    this.revokedTokens = new Set();
   }
 
   async getUserByEmail(email) {
@@ -22,28 +23,34 @@ class AuthService {
     }
   }
 
+  async comparePasswords(inputPassword, hashedPassword) {
+    try {
+      const isValid = await bcrypt.compare(inputPassword, hashedPassword);
+      return isValid;
+    } catch (error) {
+      console.error('Error al comparar contraseñas:', error);
+      throw error;
+    }
+  }
+
   async login(email, password) {
     try {
-      const user = await this.userModel.findByEmail(email);
+      const user = await this.getUserByEmail(email);
 
       if (!user) {
         return null; // Usuario no encontrado
       }
 
-      const isValidPassword = await bcrypt.compare(password, user.USU_CONTRASENIA);
+      const isValidPassword = await this.comparePasswords(password, user.USU_CONTRASENIA);
 
       if (!isValidPassword) {
         return null; // Contraseña incorrecta
       }
 
       // Generar token JWT
-      const token = jwt.sign({ userId: user.USR_IDENTIFICACION, email: user.USU_CORREO, rol: user.ROL_DESCRIPCION }, this.secretKey, {
-        expiresIn: '30s', // Tiempo expiracion
-      });
+      const token = this.generateToken(user);
 
       console.log('Token generado:', token);
-
-      res.json({ token });
 
       user.token = token;
 
@@ -52,6 +59,42 @@ class AuthService {
       console.error('Error en la autenticación:', error);
       throw error;
     }
+  }
+
+  generateToken(user) {
+    return jwt.sign(
+      { userId: user.USR_IDENTIFICACION, email: user.USU_CORREO, rol: user.ROL_DESCRIPCION },
+      this.secretKey,
+      { expiresIn: '2m' }
+    );
+  }
+
+  verifyToken(token) {
+    return new Promise((resolve, reject) => {
+      jwt.verify(token, this.secretKey, (err, decoded) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(decoded);
+        }
+      });
+    });
+  }
+
+  revokeToken(token) {
+    this.revokedTokens.add(token);
+  }
+
+  checkRole(allowedRoles) {
+    return (req, res, next) => {
+      const userRole = req.user ? req.user.rol : null;
+
+      if (!userRole || !allowedRoles.includes(userRole)) {
+        return res.status(403).json({ message: 'Unauthorized' });
+      }
+
+      next();
+    };
   }
 }
 

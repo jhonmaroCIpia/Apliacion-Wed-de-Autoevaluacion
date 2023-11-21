@@ -1,4 +1,5 @@
 // index.js
+require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const itemController = require('./itemController');
@@ -12,21 +13,14 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-const pool = mysql.createPool({
-  connectionLimit: 10,
-  host: 'localhost',
-  database: 'db_autoevaluacion',
-  user: 'root',
-  password: '',
-});
+const pool = require('./ruta/al/pool');
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`RUNNING SERVER IN: ${PORT}`);
 });
 
-const authMiddleware = new AuthMiddleware('PASSWORD'); // Reemplazar
-
+const authMiddleware = new AuthMiddleware(process.env.SECRET_KEY || 'defaultSecret');
 
 app.get('/', (req, res) => {
   res.send('HOLA');
@@ -43,4 +37,3 @@ app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ error: 'Internal Server Error' });
 });
-

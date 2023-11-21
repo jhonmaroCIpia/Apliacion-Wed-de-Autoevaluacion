@@ -1,3 +1,4 @@
+// authMiddleware.js
 const jwt = require('jsonwebtoken');
 
 class AuthMiddleware {
@@ -16,23 +17,25 @@ class AuthMiddleware {
 
     console.log('Token recibido:', token);
 
-    // Verificar si el token está en la lista de tokens revocados
     if (this.revokedTokens.has(token)) {
       return res.status(403).json({ message: 'Token ha sido revocado' });
     }
 
     jwt.verify(token, this.secretKey, (err, decoded) => {
       if (err) {
-        return res.status(403).json({ message: 'Token invalido' });
+        if (err.name === 'TokenExpiredError') {
+          return res.status(401).json({ message: 'Token ha expirado' });
+        }
+        return res.status(403).json({ message: 'Token inválido' });
       }
 
       console.log('Decodificado:', decoded);
 
       if (!decoded.rol) {
-        return res.status(403).json({ message: 'Token invalido: Falta rol' });
+        return res.status(403).json({ message: 'Token inválido: Falta rol' });
       }
 
-      req.user = decoded; // Agrega la información del usuario al objeto de solicitud
+      req.user = decoded;
       next();
     });
   }
