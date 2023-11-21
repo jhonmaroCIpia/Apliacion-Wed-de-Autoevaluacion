@@ -1,14 +1,12 @@
 {
   "ExpandedNodes": [
     "",
-    "\\pryAutoEvaluacion",
-    "\\pryAutoEvaluacion\\.angular",
-    "\\pryAutoEvaluacion\\servidor",
-    "\\pryAutoEvaluacion\\servidor\\models",
-    "\\pryAutoEvaluacion\\src",
-    "\\pryAutoEvaluacion\\src\\app",
-    "\\pryAutoEvaluacion\\src\\app\\item-list"
+    "\\.angular",
+    "\\servidor",
+    "\\servidor\\models",
+    "\\src",
+    "\\src\\app"
   ],
-  "SelectedNode": "\\pryAutoEvaluacion\\src\\app\\app-routing.module.ts",
+  "SelectedNode": "\\src\\app\\item-list",
   "PreviewInSolutionExplorer": false
 }
