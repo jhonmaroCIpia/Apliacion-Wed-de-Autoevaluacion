@@ -1,4 +1,3 @@
-// authMiddleware.js
 const jwt = require('jsonwebtoken');
 
 class AuthMiddleware {
