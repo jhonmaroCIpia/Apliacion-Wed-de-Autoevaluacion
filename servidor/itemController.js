@@ -1,4 +1,3 @@
-// itemController.js
 const express = require('express');
 const ItemEvaluacion = require('./models/ItemEvaluacion');
 const AuthMiddleware = require('./authMiddleware');
