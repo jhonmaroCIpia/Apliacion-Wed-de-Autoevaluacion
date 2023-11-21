@@ -1,11 +1,4 @@
-const mysql = require('mysql');
-const conn = mysql.createConnection({
-  host: 'localhost',
-  user: 'root',
-  password: '',
-  database: 'db_autoevaluacion'
-});
-
+const pool = require('../ruta/al/pool');
 class Usuario {
   static findByEmail(email) {
     const query = `
@@ -27,7 +20,7 @@ class Usuario {
     `;
 
     return new Promise((resolve, reject) => {
-      conn.query(query, [email], (error, results) => {
+      pool.query(query, [email], (error, results) => {
         if (error) {
           reject(error);
         } else {
